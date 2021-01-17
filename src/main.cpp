@@ -1,7 +1,7 @@
 /*
  * @Author: Caffreyfans
  * @Date: 2021-01-08 19:51:44
- * @LastEditTime: 2021-01-17 13:39:45
+ * @LastEditTime: 2021-01-17 14:37:32
  * @Description: 串口 MQTT 透传
  */
 /*
@@ -56,9 +56,9 @@
 #define CONFIG_PATH "/config"
 
 #ifdef DEBUG
-#define DEBUG_INFO(fmt, ...)   printf_P(PSTR(fmt "\n") , ##__VA_ARGS__);
+#define DEBUG_INFO(fmt, ...)   printf_P(PSTR(fmt "\n") , ##__VA_ARGS__)
 #else
-#define DEBUG_INFO(fmt, ...)   // printf_P(PSTR(fmt "\n") , ##__VA_ARGS__);
+#define DEBUG_INFO(fmt, ...)   // printf_P(PSTR(fmt "\n") , ##__VA_ARGS__)
 #endif
 
 /* 重置引脚 */
@@ -152,8 +152,15 @@ void mqtt_callback(char *topic, byte *payload, unsigned int length) {
   for (unsigned int i = 0; i < length; i++) {
     msg += (char)payload[i];
   }
-  Serial.print(msg);
-  Serial1.print(msg);
+  Serial.println(msg);
+  Serial1.println(msg);
+}
+
+void mqtt_set_server() {
+  const char *server = config["server"];
+  uint16_t port = (int)config["port"];
+  mqttClient.setServer(server, port);
+  mqttClient.setCallback(mqtt_callback);
 }
 
 void mqtt_network_check() {
@@ -198,29 +205,18 @@ void setup() {
   wm.addParameter(&custom_mqtt_password);
   wm.addParameter(&custom_mqtt_send_topic);
   wm.addParameter(&custom_mqtt_receive_topic);
-  wm.setSaveParamsCallback([]() { save_params = true; });
+  wm.setSaveParamsCallback([]() { 
+    save_params = true; 
+    });
   if (!wm.autoConnect()) {
     DEBUG_INFO("failed to connect and hit timeout");
     delay(3000);
     ESP.restart();
   }
   WiFi.mode(WIFI_STA);
-  if (save_params) {
-    config["server"] = custom_mqtt_server.getValue();
-    config["port"] = custom_mqtt_port.getValue();
-    config["user"] = custom_mqtt_user.getValue();
-    config["password"] = custom_mqtt_password.getValue();
-    config["send_topic"] = custom_mqtt_send_topic.getValue();
-    config["receive_topic"] = custom_mqtt_receive_topic.getValue();
-    save_config();
-    ESP.restart();
-  }
 
-  const char *server = config["server"];
-  uint16_t port = (int)config["port"];
-  mqttClient.setServer(server, port);
-  mqttClient.setCallback(mqtt_callback);
   wm.startWebPortal();
+  mqtt_set_server();
 }
 
 void loop() {
@@ -234,5 +230,16 @@ void loop() {
   if (mqttClient.connected() && (millis() - last_read_uart) > 200) {
     read_uart();
     last_read_uart = millis();
+  }
+  if (save_params) {
+    config["server"] = custom_mqtt_server.getValue();
+    config["port"] = custom_mqtt_port.getValue();
+    config["user"] = custom_mqtt_user.getValue();
+    config["password"] = custom_mqtt_password.getValue();
+    config["send_topic"] = custom_mqtt_send_topic.getValue();
+    config["receive_topic"] = custom_mqtt_receive_topic.getValue();
+    save_config();
+    save_params = false;
+    ESP.restart();
   }
 }
