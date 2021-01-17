@@ -3,3 +3,8 @@
 
 ### 效果演示
 ![](pic/demo.gif)
+
+### 使用步骤
+1. 到 [releases](https://github.com/Caffreyfans/UART-MQTT-Trans/releases) 选择自己的固件。
+2. 使用工具刷入固件。
+3. 连接 ESP8266 热点进行配置。
