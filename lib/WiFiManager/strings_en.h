@@ -64,6 +64,8 @@ const char HTTP_ERASEBTN[]         PROGMEM = "<br/><form action='/erase' method=
 const char HTTP_UPDATEBTN[]        PROGMEM = "<br/><form action='/update' method='get'><button>Update</button></form>";
 const char HTTP_BACKBTN[]          PROGMEM = "<hr><br/><form action='/' method='get'><button>Back</button></form>";
 
+const char MQTT_STATUS_ON[]        PROGMEM = "<div class='msg S'><strong>MQTT</strong> connected</div>";
+const char MQTT_STATUS_OFF[]       PROGMEM = "<div class='msg S'><strong>MQTT</strong> disconnected</div>";
 const char HTTP_STATUS_ON[]        PROGMEM = "<div class='msg S'><strong>Connected</strong> to {v}<br/><em><small>with IP {i}</small></em></div>";
 const char HTTP_STATUS_OFF[]       PROGMEM = "<div class='msg {c}'><strong>Not Connected</strong> to {v}{r}</div>";
 const char HTTP_STATUS_OFFPW[]     PROGMEM = "<br/>Authentication Failure"; // STATION_WRONG_PASSWORD,  no eps32

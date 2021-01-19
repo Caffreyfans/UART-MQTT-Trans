@@ -11,13 +11,14 @@
  */
 
 #include "WiFiManager.h"
-
+#include <PubSubClient.h>
 #if defined(ESP8266) || defined(ESP32)
 
 #ifdef ESP32
 uint8_t WiFiManager::_lastconxresulttmp = WL_IDLE_STATUS;
 #endif
 
+extern PubSubClient mqttClient;
 /**
  * --------------------------------------------------------------------------------
  *  WiFiManagerParameter
@@ -1601,6 +1602,7 @@ String WiFiManager::getParamOut(){
           break;
       }
 
+
       // Input templating
       // "<br/><input id='{i}' name='{n}' maxlength='{l}' value='{v}' {c}>";
       // if no ID use customhtml for item, else generate from param string
@@ -2230,6 +2232,12 @@ void WiFiManager::handleClose(){
 void WiFiManager::reportStatus(String &page){
   updateConxResult(WiFi.status());
   String str;
+  if (mqttClient.connected()) {
+    str = FPSTR(MQTT_STATUS_ON);
+  } else {
+    str = FPSTR(MQTT_STATUS_OFF);
+  }
+  page += str;
   if (WiFi_SSID() != ""){
     if (WiFi.status()==WL_CONNECTED){
       str = FPSTR(HTTP_STATUS_ON);

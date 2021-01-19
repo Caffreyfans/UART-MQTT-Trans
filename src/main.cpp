@@ -1,7 +1,7 @@
 /*
  * @Author: Caffreyfans
  * @Date: 2021-01-08 19:51:44
- * @LastEditTime: 2021-01-17 20:07:12
+ * @LastEditTime: 2021-01-19 22:34:34
  * @Description: 串口 MQTT 透传
  */
 /*
@@ -61,6 +61,9 @@
 #define DEBUG_INFO(fmt, ...)   // printf_P(PSTR(fmt "\n") , ##__VA_ARGS__)
 #endif
 
+/* 波特率接受缓存区 */
+#define BAUD_RATE_MAX_LEN 10
+#define DEFAULT_BAUD_RATE 115200
 /* 重置引脚 */
 #define RESET_PIN 0
 
@@ -72,6 +75,7 @@
 #define MQTT_PASSWORD_MAX_LEN 32
 #define MQTT_TOPIC_MAX_LEN 128
 
+char baud_rate[BAUD_RATE_MAX_LEN];
 char mqtt_server[MQTT_SERVER_MAX_LEN];
 char mqtt_port[MQTT_PORT_MAX_LEN];
 char mqtt_user[MQTT_USER_MAX_LEN];
@@ -87,6 +91,9 @@ PubSubClient mqttClient(espClient);
 bool save_params = false;
 unsigned long last_check_mqtt;
 unsigned long last_read_uart;
+
+WiFiManagerParameter custom_baud_rate("baud_rate", "baud rate", baud_rate,
+                                        sizeof(baud_rate));
 
 WiFiManagerParameter custom_mqtt_server("server", "mqtt server", mqtt_server,
                                         sizeof(mqtt_server));
@@ -152,8 +159,8 @@ void mqtt_callback(char *topic, byte *payload, unsigned int length) {
   for (unsigned int i = 0; i < length; i++) {
     msg += (char)payload[i];
   }
-  Serial.println(msg);
-  Serial1.println(msg);
+  Serial.print(msg);
+  // Serial1.print(msg);
 }
 
 void mqtt_set_server() {
@@ -181,8 +188,21 @@ void mqtt_network_check() {
 }
 
 void setup() {
-  Serial.begin(115200);
-  Serial1.begin(115200);
+  LittleFS.begin();
+  if (load_config()) {
+    DEBUG_INFO("load config success\n");
+    serializeJsonPretty(config, Serial);
+  } else {
+    DEBUG_INFO("Load config failed\n");
+  }
+  int baud_rate = (int)config["baud_rate"];
+  if (baud_rate > 0) {
+    Serial.begin(baud_rate);
+    Serial1.begin(baud_rate);
+  } else {
+    Serial.begin(115200);
+    Serial1.begin(115200);
+  }
   DEBUG_INFO();
   button.attachDuringLongPress([]() {
     DEBUG_INFO("erase wifi config");
@@ -192,13 +212,8 @@ void setup() {
     ESP.restart();
   });
 
-  LittleFS.begin();
-  if (load_config()) {
-    DEBUG_INFO("load config success\n");
-  } else {
-    DEBUG_INFO("Load config failed\n");
-  }
   wm.setDebugOutput(false);
+  wm.addParameter(&custom_baud_rate);
   wm.addParameter(&custom_mqtt_server);
   wm.addParameter(&custom_mqtt_port);
   wm.addParameter(&custom_mqtt_user);
@@ -232,6 +247,7 @@ void loop() {
     last_read_uart = millis();
   }
   if (save_params) {
+    config["baud_rate"] = String(custom_baud_rate.getValue()).toInt();
     config["server"] = custom_mqtt_server.getValue();
     config["port"] = custom_mqtt_port.getValue();
     config["user"] = custom_mqtt_user.getValue();
