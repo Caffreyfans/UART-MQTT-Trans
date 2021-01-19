@@ -1,7 +1,7 @@
 /*
  * @Author: Caffreyfans
  * @Date: 2021-01-08 19:51:44
- * @LastEditTime: 2021-01-19 22:34:34
+ * @LastEditTime: 2021-01-19 22:57:22
  * @Description: 串口 MQTT 透传
  */
 /*
@@ -191,7 +191,27 @@ void setup() {
   LittleFS.begin();
   if (load_config()) {
     DEBUG_INFO("load config success\n");
-    serializeJsonPretty(config, Serial);
+    String baud_rate = config["baud_rate"];
+    String server = config["server"];
+    String port = config["port"];
+    String user = config["user"];
+    String password = config["password"];
+    String send_topic = config["send_topic"];
+    String receive_topic = config["receive_topic"];
+    if (!baud_rate.isEmpty())
+    custom_baud_rate.setValue(baud_rate.c_str(), baud_rate.length());
+    if (!server.isEmpty())
+    custom_mqtt_server.setValue(server.c_str(), server.length());
+    if (!port.isEmpty())
+    custom_mqtt_port.setValue(port.c_str(), port.length());
+    if (!user.isEmpty())
+    custom_mqtt_user.setValue(user.c_str(), user.length());
+    if (!password.isEmpty())
+    custom_mqtt_password.setValue(password.c_str(), password.length());
+    if (!send_topic.isEmpty())
+    custom_mqtt_send_topic.setValue(send_topic.c_str(), send_topic.length());
+    if (!receive_topic.isEmpty())
+    custom_mqtt_receive_topic.setValue(receive_topic.c_str(), receive_topic.length());
   } else {
     DEBUG_INFO("Load config failed\n");
   }
@@ -247,7 +267,7 @@ void loop() {
     last_read_uart = millis();
   }
   if (save_params) {
-    config["baud_rate"] = String(custom_baud_rate.getValue()).toInt();
+    config["baud_rate"] = custom_baud_rate.getValue();
     config["server"] = custom_mqtt_server.getValue();
     config["port"] = custom_mqtt_port.getValue();
     config["user"] = custom_mqtt_user.getValue();
