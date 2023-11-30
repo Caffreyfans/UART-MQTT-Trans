@@ -1,7 +1,7 @@
 /*
  * @Author: Caffreyfans
  * @Date: 2021-01-08 19:51:44
- * @LastEditTime: 2023-11-30
+ * @LastEditTime: 2021-01-19 22:57:22
  * @Description: 串口 MQTT 透传
  */
 /*
@@ -186,12 +186,25 @@ void read_uart() {
 
 }
 
-// MQTT服务器、端口
+// mqtt接收之后处理
+void mqtt_callback(char *topic, byte *payload, unsigned int length) {
+  String msg;
+  for (unsigned int i = 0; i < length; i++) {
+    msg += (char)payload[i];
+  }
+  Serial.print(msg);
+}
+
+
+// MQTT服务器、端口、回调
 void mqtt_set_server() {
   const char *server = config["server"];
   uint16_t port = (int)config["port"];
   mqttClient.setServer(server, port);
+  mqttClient.setCallback(mqtt_callback);
 }
+
+
 
 // 连接MQTT
 void mqtt_network_check() {
