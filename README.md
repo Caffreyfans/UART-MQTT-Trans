@@ -66,11 +66,17 @@
 
 1、准备好`ESP8266`的`Arduino`开发环境
 
-- 安装`Arduino`软件（下载官网：[Software | Arduino](https://www.arduino.cc/en/software)）![image-20231201115618594](https://sanxiadaba-pic.oss-cn-hangzhou.aliyuncs.com/img/image-20231201115618594.png)
+- 安装`Arduino`软件（下载官网：[Software | Arduino](https://www.arduino.cc/en/software)）这里是`1.8.19`版本(在我的测试中`Arduino IDE`版本`1.8.19`、`2.1.0`均正常) *注：安装过程中会让你安装一些组件，一路点安装、下一步即可*![image-20231201115618594](https://sanxiadaba-pic.oss-cn-hangzhou.aliyuncs.com/img/image-20231201115618594.png)
 
-- 安装`ESP8266`的`Arduino`开发环境，注意是`3.1.12`版本，其它版本可能出现问题
+- 安装`ESP8266`的`Arduino`开发环境，先添加附加开发板管理网址`http://arduino.esp8266.com/stable/package_esp8266com_index.json`，然后安装开发板扩展包，注意是`3.1.12`版本，其它版本可能出现问题，下载库的时候可能会因为`github`被墙而无法下载，自行在网上搜索解决方案
 
-  ![image-20231201122308180](https://sanxiadaba-pic.oss-cn-hangzhou.aliyuncs.com/img/image-20231201122308180.png)
+  ![image-20231201130006353](https://sanxiadaba-pic.oss-cn-hangzhou.aliyuncs.com/img/image-20231201130006353.png)
+
+![image-20231201125507908](https://sanxiadaba-pic.oss-cn-hangzhou.aliyuncs.com/img/image-20231201125507908.png)
+
+![image-20231201130043913](https://sanxiadaba-pic.oss-cn-hangzhou.aliyuncs.com/img/image-20231201130043913.png)
+
+![image-20231201133347768](https://sanxiadaba-pic.oss-cn-hangzhou.aliyuncs.com/img/image-20231201133347768.png)
 
 - 烧录`ESP8266`的`Arduino`固件(已经烧录`Arduino`固件的不用烧录)
 
@@ -84,9 +90,9 @@
 
 | ![image-20231201114558214](https://sanxiadaba-pic.oss-cn-hangzhou.aliyuncs.com/img/image-20231201114558214.png) |
 | ------------------------------------------------------------ |
-| ![image-20231201114456697](https://sanxiadaba-pic.oss-cn-hangzhou.aliyuncs.com/img/image-20231201114456697.png) |
+| ![image-20231201134034984](https://sanxiadaba-pic.oss-cn-hangzhou.aliyuncs.com/img/image-20231201134034984.png) |
 
-3、注意不要更新（尤其是`WIFI Manager`库）
+3、注意不要更新相关库文件版本（尤其是`WIFI Manager`库）
 
 ![image-20231201114231826](https://sanxiadaba-pic.oss-cn-hangzhou.aliyuncs.com/img/image-20231201114231826.png)
 
