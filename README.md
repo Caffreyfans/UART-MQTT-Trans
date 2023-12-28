@@ -8,11 +8,13 @@
 
 以下代码都在 `ESP8266 Node MCU`验证过(`ESP12F`模组)
 
+下面以`ESP8266 Node MCU`为例，视频演示链接：https://www.bilibili.com/video/BV1d94y1c7RA （注：视频演示的是核心功能的使用，`github`仓库会更新一些新功能）
+
 ### 配置页面
 
 |                           设备信息                           |                           MQTT配置                           |                           WIFI配置                           |
 | :----------------------------------------------------------: | :----------------------------------------------------------: | :----------------------------------------------------------: |
-| ![image-20231130162217993](https://sanxiadaba-pic.oss-cn-hangzhou.aliyuncs.com/img/image-20231130162217993.png) | ![image-20231130162251171](https://sanxiadaba-pic.oss-cn-hangzhou.aliyuncs.com/img/image-20231130162251171.png) | ![image-20231130162242987](https://sanxiadaba-pic.oss-cn-hangzhou.aliyuncs.com/img/image-20231130162242987.png) |
+| ![image-20231130162217993](https://sanxiadaba-pic.oss-cn-hangzhou.aliyuncs.com/img/image-20231130162217993.png) | ![企业微信截图_17037258401379](https://sanxiadaba-pic.oss-cn-hangzhou.aliyuncs.com/img/企业微信截图_17037258401379.png) | ![image-20231130162242987](https://sanxiadaba-pic.oss-cn-hangzhou.aliyuncs.com/img/image-20231130162242987.png) |
 
 
 
@@ -36,27 +38,33 @@
 
 ### **固件使用步骤**
 
-1、下载烧录固件（固件在`build`目录下）
+1、下载烧录固件并烧录（固件在`build`目录下，烧录工具`ESP8266Flasher.exe`也在仓库里。
+
+*注：使用这个软件烧录需要确保你的`ESP8266`自带自动下载电路（大部分都带，有的不带的需要点击一下`Flash`按键），确保端口、烧录固件选择正确*
 
 | ![image-20231130165151013](https://sanxiadaba-pic.oss-cn-hangzhou.aliyuncs.com/img/image-20231130165151013.png) | ![image-20231130165202264](https://sanxiadaba-pic.oss-cn-hangzhou.aliyuncs.com/img/image-20231130165202264.png) |
 | ------------------------------------------------------------ | ------------------------------------------------------------ |
 
-2、`ESP8266`会启动一个热点，连接上之后访问（`192.168.4.1`）会跳转到配置页面
+2、`ESP8266`会启动一个热点，连接上热点之后（以`ESP`开头的热点）访问`192.168.4.1`会跳转到配置页面
 
 | ![image-20231130165433039](https://sanxiadaba-pic.oss-cn-hangzhou.aliyuncs.com/img/image-20231130165433039.png) | ![image-20231130165535946](https://sanxiadaba-pic.oss-cn-hangzhou.aliyuncs.com/img/image-20231130165535946.png) |
 | ------------------------------------------------------------ | ------------------------------------------------------------ |
 
-3、配置成功后点击保存
+3、点击选择`WIFI`，输入`WIFI`密码、配置`MQTT`之后点击保存
 
-| ![image-20231130165615520](https://sanxiadaba-pic.oss-cn-hangzhou.aliyuncs.com/img/image-20231130165615520.png) | ![image-20231130165633811](https://sanxiadaba-pic.oss-cn-hangzhou.aliyuncs.com/img/image-20231130165633811.png) | ![image-20231130165649370](https://sanxiadaba-pic.oss-cn-hangzhou.aliyuncs.com/img/image-20231130165649370.png) |
+*注：事先准备一个`MQTT`服务器，`MQTT`服务器可以是外网，确保此`WIFI`可以访问你的`MQTT`服务器*，*建议先配置好`WIFI`保存后再配置`MQTT`*
+
+| ![image-20231130165615520](https://sanxiadaba-pic.oss-cn-hangzhou.aliyuncs.com/img/image-20231130165615520.png) | ![企业微信截图_17037258401379](https://sanxiadaba-pic.oss-cn-hangzhou.aliyuncs.com/img/企业微信截图_17037258401379.png) | ![image-20231130165649370](https://sanxiadaba-pic.oss-cn-hangzhou.aliyuncs.com/img/image-20231130165649370.png) |
 | ------------------------------------------------------------ | ------------------------------------------------------------ | ------------------------------------------------------------ |
 
-4、串口连接使用
+4、串口连接使用（确保客户端、`ESP8266`都能够正常访问`MQTT`服务器）
+
+*注：串口默认波特率为`9600`，串口发送`ESP8266`需要结束符，默认为`uart-mqtt`，二者都可以在配置页面修改(修改后重启模块)*
 
 |      | ![image-20231130164423978](https://sanxiadaba-pic.oss-cn-hangzhou.aliyuncs.com/img/image-20231130164423978.png) |
 | ---- | ------------------------------------------------------------ |
 
-5、日志输出
+5、日志输出默认开启，日志输出引脚默认为`D0`（可在代码里自定义修改），波特率与透传串口相同，调试信息默认打印设备信息以及`ESP8266`与`MQTT`透传、接收的信息
 
 ![调试口](https://sanxiadaba-pic.oss-cn-hangzhou.aliyuncs.com/img/调试口.png)
 
@@ -86,7 +94,7 @@
 
 2、准备好`MQTT`服务器、串口助手、烧录工具
 
-3、双击打开`Aduino`项目，首选项配置当前路径（重点）
+3、双击打开`Aduino`项目，在**首选项配置项目文件夹位置为D:\\UART-MQTT-Trans-master**(具体看自己路径)
 
 | ![image-20231201114558214](https://sanxiadaba-pic.oss-cn-hangzhou.aliyuncs.com/img/image-20231201114558214.png) |
 | ------------------------------------------------------------ |
@@ -125,16 +133,16 @@
 
 **注：**
 
-1、串口波特率只能设置为`9600`（过高波特在测试下会出现收发数据分包等现象）
+1、串口波特率默认设置为`9600`（可在配置页面自行更改，修改后需重启模块）
 
 2、长按`flash`三秒左右等待模块LED闪烁，说明清除配置成功
 
-3、串口向`MQTT`发送数据时，注意要有一个结尾标志，默认是`uart-mqtt`
+3、串口向`MQTT`发送数据时，注意要有一个结尾标志，默认是`uart-mqtt`（可在配置页面自行更改，修改后需重启模块）
 
-4、在重启时，模块会通过串口打印自己信息
+4、在重启时，模块会通过串口打印自己信息（注意串口波特率要匹配）
 
 5、事先启动一个`MQTT`服务器，在配置页面可以配置`user` `password` `clientId`等
 
 6、本固件已在`ESP8266MCU`模块上验证过
 
-7、日志默认在`D1`也就是`GPIO16`输出日志，可在代码里自定义配置
+7、日志默认在`D1`也就是`GPIO16`输出日志（可在代码里自行配置）
