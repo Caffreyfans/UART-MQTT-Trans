@@ -44,7 +44,7 @@
 /*
  * @Author: Caffreyfans
  * @Date: 2021-01-08
- * @LastEditTime: 2023-12-1
+ * @LastEditTime: 2023-12-28
  * @Description: 串口 MQTT 透传
  */
 
@@ -58,7 +58,8 @@
 #include <SoftwareSerial.h>
 
 
-// 默认情况下日志在D0（GPIO16) 通过串口输出 9600 8N1
+// 默认情况下日志在D0（GPIO16) 通过串口输出 8N1 debug波特率与uart波特率一致
+// 默认为9600 8N1
 #define DEBUG  // 注释此行DEBUG__TX_PIN不会输出日志
 
 
@@ -80,9 +81,6 @@ SoftwareSerial my_serial= SoftwareSerial(100, DEBUG_TX_PIN);
 // 存放配置
 #define CONFIG_PATH "/config"
 
-// 串口波特率，这里只能9600 其他波特率测试会出现接收不全情况
-// 8N1
-#define DEFAULT_BAUD_RATE 9600
 // 重置引脚号 长按3s会重置 注意串口输出打印信息
 #define FLASH_PIN 0
 
@@ -94,6 +92,8 @@ SoftwareSerial my_serial= SoftwareSerial(100, DEBUG_TX_PIN);
 #define MQTT_PASSWORD_MAX_LEN 128
 #define MQTT_TOPIC_MAX_LEN 128
 #define MQTT_CLIENT_ID_LEN 128
+#define MQTT_BAUD_LEN 10
+#define MQTT_END_FLAG_LEN 32
 
 // 开辟数组、存储配置
 char mqtt_server[MQTT_SERVER_MAX_LEN];
@@ -103,10 +103,12 @@ char mqtt_password[MQTT_PASSWORD_MAX_LEN];
 char mqtt_send_topic[MQTT_TOPIC_MAX_LEN];
 char mqtt_receive_topic[MQTT_TOPIC_MAX_LEN];
 char mqtt_client_id[MQTT_TOPIC_MAX_LEN];
+char mqtt_baud[MQTT_BAUD_LEN]={'9','6','0','0'};
+char mqtt_end_flag[MQTT_END_FLAG_LEN] ={'u','a','r','t','-','m','q','t','t'};
+
 
 // 按键配置
 OneButton button(FLASH_PIN, true);
-
 
 
 // WIFI MQTT 配置(一般不用管)
@@ -143,6 +145,17 @@ WiFiManagerParameter custom_mqtt_receive_id("mqtt_client_id",
                                                "mqtt client id",
                                                mqtt_client_id,
                                                sizeof(mqtt_client_id));
+
+WiFiManagerParameter custom_mqtt_receive_baud("mqtt_baud",
+                                               "uart baud",
+                                               mqtt_baud,
+                                               sizeof(mqtt_baud));
+
+WiFiManagerParameter custom_mqtt_receive_end_flag("end_flag",
+                                            "end flag",
+                                            mqtt_end_flag,
+                                            sizeof(mqtt_end_flag));
+    
 
 // 读取配置
 bool load_config() {
@@ -256,38 +269,65 @@ void mqtt_network_check() {
 // 初始化信息会通过串口打印
 // 长按3s flash按钮清空配置
 void setup() {
+  char  baud_uart_mqtt_flag = 0;
+  long baud_uart_mqtt = 9600;
+  char  uart_mqtt_end_flag = 0;
   LittleFS.begin();
+
   if (load_config()) {
-    Serial.println("load config success");
-    String server = config["server"];
-    String port = config["port"];
-    String user = config["user"];
-    String password = config["password"];
-    String send_topic = config["send_topic"];
-    String receive_topic = config["receive_topic"];
-    String mqtt_client_id_string = config["mqtt_client_id"];
-    if (!server.isEmpty())
-    custom_mqtt_server.setValue(server.c_str(), MQTT_SERVER_MAX_LEN );
-    if (!port.isEmpty())
-    custom_mqtt_port.setValue(port.c_str(), MQTT_PORT_MAX_LEN );
-    if (!user.isEmpty())
-    custom_mqtt_user.setValue(user.c_str(), MQTT_USER_MAX_LEN );
-    if (!password.isEmpty())
-    custom_mqtt_password.setValue(password.c_str(),MQTT_PASSWORD_MAX_LEN );
-    if (!send_topic.isEmpty())
-    custom_mqtt_send_topic.setValue(send_topic.c_str(), MQTT_TOPIC_MAX_LEN );
-    if (!receive_topic.isEmpty())
-    custom_mqtt_receive_topic.setValue(receive_topic.c_str(), MQTT_TOPIC_MAX_LEN );
-    if (!mqtt_client_id_string.isEmpty())
-    custom_mqtt_receive_id.setValue(mqtt_client_id_string.c_str(), MQTT_CLIENT_ID_LEN );
+  String  mqtt_end_flag_string = config["end_flag"];
+  String  mqtt_baud_string = config["mqtt_baud"];
+  String  server = config["server"];
+  String  port = config["port"];
+  String  user = config["user"];
+  String  password = config["password"];
+  String  send_topic = config["send_topic"];
+  String  receive_topic = config["receive_topic"];
+  String  mqtt_client_id_string = config["mqtt_client_id"];
+
+  if (!mqtt_end_flag_string.isEmpty())
+  {
+    uart_mqtt_end_flag =1;
+    custom_mqtt_receive_end_flag.setValue(mqtt_end_flag_string.c_str(), MQTT_END_FLAG_LEN );
+  }
+  if (!server.isEmpty())
+  custom_mqtt_server.setValue(server.c_str(), MQTT_SERVER_MAX_LEN );
+  if (!port.isEmpty())
+  custom_mqtt_port.setValue(port.c_str(), MQTT_PORT_MAX_LEN );
+  if (!user.isEmpty())
+  custom_mqtt_user.setValue(user.c_str(), MQTT_USER_MAX_LEN );
+  if (!password.isEmpty())
+  custom_mqtt_password.setValue(password.c_str(),MQTT_PASSWORD_MAX_LEN );
+  if (!send_topic.isEmpty())
+  custom_mqtt_send_topic.setValue(send_topic.c_str(), MQTT_TOPIC_MAX_LEN );
+  if (!receive_topic.isEmpty())
+  custom_mqtt_receive_topic.setValue(receive_topic.c_str(), MQTT_TOPIC_MAX_LEN );
+  if (!mqtt_client_id_string.isEmpty())
+  custom_mqtt_receive_id.setValue(mqtt_client_id_string.c_str(), MQTT_CLIENT_ID_LEN );
+  if (!mqtt_baud_string.isEmpty()){
+    custom_mqtt_receive_baud.setValue(mqtt_baud_string.c_str(), MQTT_BAUD_LEN );
+    baud_uart_mqtt_flag =1;
+  }
   } else {
     Serial.println("Load config failed");
   }
-    Serial.begin(DEFAULT_BAUD_RATE);
-    #ifdef DEBUG
-    // 自定义串口初始化
-      my_serial.begin(DEFAULT_BAUD_RATE);
-    #endif
+  if(baud_uart_mqtt_flag==1)
+  {
+      String tmp =config["mqtt_baud"];
+      baud_uart_mqtt = atoi(tmp.c_str());
+  }
+  if(uart_mqtt_end_flag==1)
+  {
+      String tmp =config["end_flag"];
+      end_flag = tmp;
+      
+  }
+  Serial.begin(baud_uart_mqtt);
+  #ifdef DEBUG
+  // 自定义串口初始化
+  my_serial.begin(baud_uart_mqtt);
+  #endif
+  
 
   button.attachDuringLongPress([]() {
     Serial.println("erase wifi config");
@@ -305,6 +345,8 @@ void setup() {
   wm.addParameter(&custom_mqtt_send_topic);
   wm.addParameter(&custom_mqtt_receive_topic);
   wm.addParameter(&custom_mqtt_receive_id);
+  wm.addParameter(&custom_mqtt_receive_baud);
+  wm.addParameter(&custom_mqtt_receive_end_flag);
   wm.setSaveParamsCallback([]() { 
     save_params = true; 
     });
@@ -355,6 +397,8 @@ void loop() {
     config["send_topic"] = custom_mqtt_send_topic.getValue();
     config["receive_topic"] = custom_mqtt_receive_topic.getValue();
     config["mqtt_client_id"] = custom_mqtt_receive_id.getValue();
+    config["mqtt_baud"] = custom_mqtt_receive_baud.getValue();
+    config["end_flag"] = custom_mqtt_receive_end_flag.getValue();
     save_config();
     save_params = false;
     ESP.restart();
